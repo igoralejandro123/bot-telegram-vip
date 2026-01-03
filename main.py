@@ -20,12 +20,10 @@ from telegram.ext import (
 # ==============================
 
 BOT_TOKEN = "8337535041:AAFyfor-WYhKL5wG6ct3VarJ5Y8i-MddLrU"
-MP_ACCESS_TOKEN = "SEU_TOKEN_MERCADO_PAGO"
+MP_ACCESS_TOKEN = "APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451"
 
 LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 
-VIDEO_1 = "FILE_ID_DO_VIDEO_1"
-VIDEO_2 = "FILE_ID_DO_VIDEO_2"
 
 TEXTO_VENDA = (
     "🔥 *GRUPO VIP EXCLUSIVO* 🔥\n\n"
@@ -160,3 +158,4 @@ if __name__ == "__main__":
     app.add_handler(CallbackQueryHandler(escolher_plano))
 
     app.run_polling()
+
