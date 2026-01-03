@@ -1,13 +1,6 @@
-import base64
-import io
 import asyncio
 import mercadopago
-import qrcode
-from telegram import (
-    Update,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup
-)
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -15,31 +8,19 @@ from telegram.ext import (
     ContextTypes
 )
 
-from telegram.ext import MessageHandler, filters
-
-async def capturar_video(update, context):
-    if update.message.video:
-        file_id = update.message.video.file_id
-        await update.message.reply_text(f"FILE_ID:\n{file_id}")
-
-app.add_handler(MessageHandler(filters.VIDEO, capturar_video))
-
-
-# ==============================
-# CONFIGURAÇÕES (EDITAR AQUI)
-# ==============================
+# ======================
+# CONFIGURAÇÕES
+# ======================
 
 BOT_TOKEN = "8337535041:AAFyfor-WYhKL5wG6ct3VarJ5Y8i-MddLrU"
 MP_ACCESS_TOKEN = "APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451"
 
 LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 
-
 TEXTO_VENDA = (
-    "🔥 *GRUPO VIP EXCLUSIVO* 🔥\n\n"
+    "🔥 GRUPO VIP EXCLUSIVO 🔥\n\n"
     "✔ Conteúdo diário\n"
-    "✔ Acesso imediato\n"
-    "✔ Sem enrolação\n\n"
+    "✔ Acesso imediato\n\n"
     "Escolha um plano abaixo 👇"
 )
 
@@ -50,25 +31,18 @@ PLANOS = {
     "vitalicio": ("Plano Vitalício", 299.90),
 }
 
-# ==============================
+# ======================
 # MERCADO PAGO
-# ==============================
+# ======================
 
 sdk = mercadopago.SDK("APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451")
 
-# ==============================
+# ======================
 # START
-# ==============================
+# ======================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
-
-    with open("video1.mp4", "rb") as v1:
-        await context.bot.send_video(chat_id=chat_id, video=v1)
-
-    with open("video2.mp4", "rb") as v2:
-        await context.bot.send_video(chat_id=chat_id, video=v2)
-
 
     keyboard = [
         [InlineKeyboardButton(f"{nome} - R$ {valor}", callback_data=plano)]
@@ -78,13 +52,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=chat_id,
         text=TEXTO_VENDA,
-        parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-# ==============================
-# CLIQUE NO PLANO
-# ==============================
+# ======================
+# PLANO SELECIONADO
+# ======================
 
 async def escolher_plano(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -100,66 +73,45 @@ async def escolher_plano(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "payer": {"email": "comprador@telegram.com"}
     }
 
-    payment = sdk.payment().create(payment_data)
-    payment = payment["response"]
+    payment = sdk.payment().create(payment_data)["response"]
 
     pix_code = payment["point_of_interaction"]["transaction_data"]["qr_code"]
-    qr_base64 = payment["point_of_interaction"]["transaction_data"]["qr_code_base64"]
 
     context.user_data["payment_id"] = payment["id"]
 
-    # Gerar QR Code imagem
-    qr_bytes = base64.b64decode(qr_base64)
-    image = io.BytesIO(qr_bytes)
-    image.name = "qrcode.png"
-
-    await query.message.reply_photo(
-        photo=image,
-        caption=(
-            f"💳 *{nome}*\n"
-            f"💰 Valor: R$ {valor}\n\n"
-            "📲 *Pix Copia e Cola:*\n"
-            f"`{pix_code}`\n\n"
-            "Após o pagamento, aguarde a confirmação automática ⏳"
-        ),
+    await query.message.reply_text(
+        f"💳 *{nome}*\n"
+        f"💰 R$ {valor}\n\n"
+        f"Pix copia e cola:\n`{pix_code}`\n\n"
+        "Após pagar, aguarde a confirmação ⏳",
         parse_mode="Markdown"
     )
 
     asyncio.create_task(verificar_pagamento(update, context))
 
-# ==============================
-# VERIFICA PAGAMENTO
-# ==============================
+# ======================
+# VERIFICAR PAGAMENTO
+# ======================
 
 async def verificar_pagamento(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     payment_id = context.user_data.get("payment_id")
 
-    for _ in range(60):  # verifica por até 5 minutos
+    for _ in range(60):
         payment = sdk.payment().get(payment_id)["response"]
 
         if payment["status"] == "approved":
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=(
-                    "✅ *Pagamento confirmado!*\n\n"
-                    "Aqui está seu acesso ao Grupo VIP 👇\n"
-                    f"{LINK_GRUPO_VIP}"
-                ),
-                parse_mode="Markdown"
+                text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
             )
             return
 
         await asyncio.sleep(5)
 
-    await context.bot.send_message(
-        chat_id=chat_id,
-        text="⏰ Pagamento não confirmado ainda. Se já pagou, aguarde alguns minutos."
-    )
-
-# ==============================
+# ======================
 # MAIN
-# ==============================
+# ======================
 
 if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -168,8 +120,3 @@ if __name__ == "__main__":
     app.add_handler(CallbackQueryHandler(escolher_plano))
 
     app.run_polling()
-
-
-
-
-
