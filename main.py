@@ -1,117 +1,23 @@
-import time
-import mercadopago
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import (
-    Updater,
-    CommandHandler,
-    CallbackQueryHandler,
-    CallbackContext
-)
-
-# ======================
-# CONFIGURAÇÕES
-# ======================
+from telegram.ext import Updater, MessageHandler, Filters
 
 BOT_TOKEN = "8337535041:AAFyfor-WYhKL5wG6ct3VarJ5Y8i-MddLrU"
-MP_ACCESS_TOKEN = "APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451"
-LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 
-TEXTO_VENDA = (
-    "🔥 GRUPO VIP EXCLUSIVO 🔥\n\n"
-    "✔ Conteúdo diário\n"
-    "✔ Acesso imediato\n\n"
-    "Escolha um plano abaixo 👇"
-)
-
-PLANOS = {
-    "mensal": ("Plano Mensal", 29.90),
-    "trimestral": ("Plano Trimestral", 79.90),
-    "semestral": ("Plano Semestral", 149.90),
-    "vitalicio": ("Plano Vitalício", 299.90),
-}
-
-sdk = mercadopago.SDK("APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451")
-
-# ======================
-# START
-# ======================
-
-def start(update: Update, context: CallbackContext):
-    keyboard = [
-        [InlineKeyboardButton(f"{nome} - R$ {valor}", callback_data=plano)]
-        for plano, (nome, valor) in PLANOS.items()
-    ]
-
-    update.message.reply_text(
-        TEXTO_VENDA,
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-# ======================
-# ESCOLHER PLANO
-# ======================
-
-def escolher_plano(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-
-    plano = query.data
-    nome, valor = PLANOS[plano]
-
-    payment_data = {
-        "transaction_amount": valor,
-        "description": nome,
-        "payment_method_id": "pix",
-        "payer": {"email": "comprador@telegram.com"}
-    }
-
-    payment = sdk.payment().create(payment_data)["response"]
-    pix_code = payment["point_of_interaction"]["transaction_data"]["qr_code"]
-
-    context.user_data["payment_id"] = payment["id"]
-
-    query.message.reply_text(
-        f"💳 {nome}\n"
-        f"💰 R$ {valor}\n\n"
-        f"Pix copia e cola:\n{pix_code}\n\n"
-        "Após pagar, aguarde a confirmação ⏳"
-    )
-
-    verificar_pagamento(query.message.chat_id, context)
-
-# ======================
-# VERIFICAR PAGAMENTO
-# ======================
-
-def verificar_pagamento(chat_id, context: CallbackContext):
-    payment_id = context.user_data.get("payment_id")
-
-    for _ in range(60):
-        payment = sdk.payment().get(payment_id)["response"]
-
-        if payment["status"] == "approved":
-            context.bot.send_message(
-                chat_id=chat_id,
-                text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
-            )
-            return
-
-        time.sleep(5)
-
-# ======================
-# MAIN
-# ======================
+def pegar_file_id(update, context):
+    if update.message.video:
+        update.message.reply_text(
+            f"FILE_ID DO VÍDEO:\n{update.message.video.file_id}"
+        )
+    else:
+        update.message.reply_text("Envie um vídeo 🎥")
 
 def main():
     updater = Updater(BOT_TOKEN, use_context=True)
     dp = updater.dispatcher
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(escolher_plano))
+    dp.add_handler(MessageHandler(Filters.all, pegar_file_id))
 
     updater.start_polling()
     updater.idle()
 
 if __name__ == "__main__":
     main()
-
