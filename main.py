@@ -64,10 +64,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
 
     with open("video1.mp4", "rb") as v1:
-    await context.bot.send_video(chat_id=chat_id, video=v1)
+        await context.bot.send_video(chat_id=chat_id, video=v1)
 
     with open("video2.mp4", "rb") as v2:
-    await context.bot.send_video(chat_id=chat_id, video=v2)
+        await context.bot.send_video(chat_id=chat_id, video=v2)
 
 
     keyboard = [
@@ -168,6 +168,7 @@ if __name__ == "__main__":
     app.add_handler(CallbackQueryHandler(escolher_plano))
 
     app.run_polling()
+
 
 
 
