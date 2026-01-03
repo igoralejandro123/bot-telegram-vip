@@ -12,9 +12,9 @@ from telegram.ext import (
 # CONFIGURAÇÕES
 # ======================
 
-BOT_TOKEN = "SEU_TOKEN_BOTFATHER"
-MP_ACCESS_TOKEN = "SEU_ACCESS_TOKEN_MERCADOPAGO"
-LINK_GRUPO_VIP = "https://t.me/+SEULINK"
+BOT_TOKEN = "8337535041:AAFyfor-WYhKL5wG6ct3VarJ5Y8i-MddLrU"
+MP_ACCESS_TOKEN = "APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451"
+LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 
 TEXTO_VENDA = (
     "🔥 GRUPO VIP EXCLUSIVO 🔥\n\n"
@@ -30,7 +30,7 @@ PLANOS = {
     "vitalicio": ("Plano Vitalício", 299.90),
 }
 
-sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
+sdk = mercadopago.SDK("APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451")
 
 # ======================
 # START
@@ -114,3 +114,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
