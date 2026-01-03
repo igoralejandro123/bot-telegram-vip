@@ -15,6 +15,16 @@ from telegram.ext import (
     ContextTypes
 )
 
+from telegram.ext import MessageHandler, filters
+
+async def capturar_video(update, context):
+    if update.message.video:
+        file_id = update.message.video.file_id
+        await update.message.reply_text(f"FILE_ID:\n{file_id}")
+
+app.add_handler(MessageHandler(filters.VIDEO, capturar_video))
+
+
 # ==============================
 # CONFIGURAÇÕES (EDITAR AQUI)
 # ==============================
@@ -158,5 +168,6 @@ if __name__ == "__main__":
     app.add_handler(CallbackQueryHandler(escolher_plano))
 
     app.run_polling()
+
 
 
