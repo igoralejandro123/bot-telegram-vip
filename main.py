@@ -44,7 +44,7 @@ PLANOS = {
 # MERCADO PAGO
 # ==============================
 
-sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
+sdk = mercadopago.SDK(APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451)
 
 # ==============================
 # START
@@ -158,4 +158,5 @@ if __name__ == "__main__":
     app.add_handler(CallbackQueryHandler(escolher_plano))
 
     app.run_polling()
+
 
