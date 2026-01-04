@@ -97,6 +97,7 @@ def escolher_plano(update: Update, context: CallbackContext):
     }
 
     payment = sdk.payment().create(payment_data)["response"]
+
     pix_data = payment["point_of_interaction"]["transaction_data"]
     pix_code = pix_data["qr_code"]
     qr_base64 = pix_data["qr_code_base64"]
@@ -108,28 +109,29 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     # Envia o QR Code como imagem
     query.message.reply_photo(
-    photo=qr_image,
-    caption=(
-        f"💳 *{nome}*\n"
-        f"💰 *Valor:* R$ {valor}\n\n"
-        "💠 *Como realizar o pagamento:*\n\n"
-        "1️⃣ Abra o aplicativo do seu banco.\n"
-        "2️⃣ Selecione a opção *Pagar* ou *PIX*.\n"
-        "3️⃣ Escolha *PIX Copia e Cola*.\n"
-        "4️⃣ Cole o código abaixo e finalize o pagamento com segurança.\n\n"
-        "⬇️ *PIX Copia e Cola:*"
-    ),
-    parse_mode="Markdown"
-)
+        photo=qr_image,
+        caption=(
+            f"💳 *{nome}*\n"
+            f"💰 *Valor:* R$ {valor}\n\n"
+            "💠 *Como realizar o pagamento:*\n\n"
+            "1️⃣ Abra o aplicativo do seu banco.\n"
+            "2️⃣ Selecione a opção *Pagar* ou *PIX*.\n"
+            "3️⃣ Escolha *PIX Copia e Cola*.\n"
+            "4️⃣ Cole o código abaixo e finalize o pagamento com segurança.\n\n"
+            "⬇️ *PIX Copia e Cola:*"
+        ),
+        parse_mode="Markdown"
+    )
 
-# Envia o código Pix separado (fica fácil de copiar)
-query.message.reply_text(
-    f"`{pix_code}`",
-    parse_mode="Markdown"
-)
+    # Envia o código Pix separado (copiável)
+    query.message.reply_text(
+        f"`{pix_code}`",
+        parse_mode="Markdown"
+    )
 
-
+    # Inicia verificação do pagamento
     verificar_pagamento(query.message.chat_id, context)
+
 
 # ======================
 # VERIFICAR PAGAMENTO
@@ -166,6 +168,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
