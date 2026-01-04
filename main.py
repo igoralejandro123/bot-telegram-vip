@@ -102,12 +102,10 @@ def escolher_plano(update: Update, context: CallbackContext):
     pix_code = pix_data["qr_code"]
     qr_base64 = pix_data["qr_code_base64"]
 
-    # Converte QR Code base64 em imagem
     qr_bytes = base64.b64decode(qr_base64)
     qr_image = io.BytesIO(qr_bytes)
     qr_image.name = "qrcode.png"
 
-    # Envia o QR Code como imagem
     query.message.reply_photo(
         photo=qr_image,
         caption=(
@@ -123,25 +121,19 @@ def escolher_plano(update: Update, context: CallbackContext):
         parse_mode="Markdown"
     )
 
-# Envia o código Pix copiável
-query.message.reply_text(
-    f"`{pix_code}`",
-    parse_mode="Markdown"
-)
+    query.message.reply_text(
+        f"`{pix_code}`",
+        parse_mode="Markdown"
+    )
 
-# Texto de orientação + botão verificar
-query.message.reply_text(
-    "👉 *Toque na chave PIX acima para copiá-la e pague no seu banco.*\n\n"
-    "‼️ *APÓS O PAGAMENTO, clique no botão abaixo para verificar o pagamento* 👇",
-    parse_mode="Markdown",
-    reply_markup=InlineKeyboardMarkup([
-        [InlineKeyboardButton("✅ VERIFICAR PAGAMENTO", callback_data="verificar_pagamento")]
-    ])
-)
-
-
-    # Inicia verificação do pagamento
-    verificar_pagamento(query.message.chat_id, context)
+    query.message.reply_text(
+        "👉 *Toque na chave PIX acima para copiá-la e pague no seu banco.*\n\n"
+        "‼️ *APÓS O PAGAMENTO, clique no botão abaixo para verificar o pagamento* 👇",
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("✅ VERIFICAR PAGAMENTO", callback_data="verificar_pagamento")]
+        ])
+    )
 
 
 # ======================
@@ -150,6 +142,13 @@ query.message.reply_text(
 
 def verificar_pagamento(chat_id, context: CallbackContext):
     payment_id = context.user_data.get("payment_id")
+
+    if not payment_id:
+        context.bot.send_message(
+            chat_id=chat_id,
+            text="⚠️ Nenhum pagamento encontrado para verificar."
+        )
+        return
 
     for _ in range(60):
         payment = sdk.payment().get(payment_id)["response"]
@@ -163,11 +162,17 @@ def verificar_pagamento(chat_id, context: CallbackContext):
 
         time.sleep(5)
 
-    def verificar_pagamento_manual(update: Update, context: CallbackContext):
+    context.bot.send_message(
+        chat_id=chat_id,
+        text="⏳ Pagamento ainda não identificado. Se já pagou, aguarde alguns minutos e tente novamente."
+    )
+
+def verificar_pagamento_manual(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer("Verificando pagamento... ⏳")
 
     verificar_pagamento(query.message.chat_id, context)
+
 
 
 # ======================
@@ -179,9 +184,9 @@ def main():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(escolher_plano))
-    dp.add_handler(CallbackQueryHandler(escolher_plano, pattern="^(?!verificar_pagamento).*$"))
     dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
+    dp.add_handler(CallbackQueryHandler(escolher_plano))
+
 
 
     updater.start_polling()
@@ -189,6 +194,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
