@@ -123,11 +123,22 @@ def escolher_plano(update: Update, context: CallbackContext):
         parse_mode="Markdown"
     )
 
-    # Envia o código Pix separado (copiável)
-    query.message.reply_text(
-        f"`{pix_code}`",
-        parse_mode="Markdown"
-    )
+# Envia o código Pix copiável
+query.message.reply_text(
+    f"`{pix_code}`",
+    parse_mode="Markdown"
+)
+
+# Texto de orientação + botão verificar
+query.message.reply_text(
+    "👉 *Toque na chave PIX acima para copiá-la e pague no seu banco.*\n\n"
+    "‼️ *APÓS O PAGAMENTO, clique no botão abaixo para verificar o pagamento* 👇",
+    parse_mode="Markdown",
+    reply_markup=InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ VERIFICAR PAGAMENTO", callback_data="verificar_pagamento")]
+    ])
+)
+
 
     # Inicia verificação do pagamento
     verificar_pagamento(query.message.chat_id, context)
@@ -152,6 +163,13 @@ def verificar_pagamento(chat_id, context: CallbackContext):
 
         time.sleep(5)
 
+    def verificar_pagamento_manual(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer("Verificando pagamento... ⏳")
+
+    verificar_pagamento(query.message.chat_id, context)
+
+
 # ======================
 # MAIN
 # ======================
@@ -162,12 +180,16 @@ def main():
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CallbackQueryHandler(escolher_plano))
+    dp.add_handler(CallbackQueryHandler(escolher_plano, pattern="^(?!verificar_pagamento).*$"))
+    dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
+
 
     updater.start_polling()
     updater.idle()
 
 if __name__ == "__main__":
     main()
+
 
 
 
