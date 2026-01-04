@@ -97,6 +97,8 @@ def escolher_plano(update: Update, context: CallbackContext):
     }
 
     payment = sdk.payment().create(payment_data)["response"]
+    context.user_data["payment_id"] = payment["id"]
+
 
     pix_data = payment["point_of_interaction"]["transaction_data"]
     pix_code = pix_data["qr_code"]
@@ -123,8 +125,14 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     query.message.reply_text(
         f"`{pix_code}`",
-        parse_mode="Markdown"
-    )
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup([
+           [InlineKeyboardButton("📋 COPIAR CHAVE PIX", callback_data="copiar_pix")]
+    ])
+  )
+    context.user_data["last_pix_code"] = pix_code
+
+
 
     query.message.reply_text(
         "👉 *Toque na chave PIX acima para copiá-la e pague no seu banco.*\n\n"
@@ -134,6 +142,22 @@ def escolher_plano(update: Update, context: CallbackContext):
             [InlineKeyboardButton("✅ VERIFICAR PAGAMENTO", callback_data="verificar_pagamento")]
         ])
     )
+
+def copiar_pix(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+
+    pix_code = context.user_data.get("last_pix_code")
+
+    if not pix_code:
+        query.message.reply_text("⚠️ Código PIX não encontrado.")
+        return
+
+    query.message.reply_text(
+        f"`{pix_code}`",
+        parse_mode="Markdown"
+    )
+
 
 
 # ======================
@@ -184,6 +208,7 @@ def main():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CallbackQueryHandler(copiar_pix, pattern="^copiar_pix$"))
     dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
     dp.add_handler(CallbackQueryHandler(escolher_plano))
 
@@ -194,6 +219,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
