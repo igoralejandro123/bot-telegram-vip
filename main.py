@@ -19,12 +19,31 @@ LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 VIDEO_1 = "BAACAgEAAxkBAAMKaVmsE6uLzN1eavu9LbmwGTcy9nkAAlAFAAI0vNFGSOpp8seZaPo4BA"
 VIDEO_2 = "BAACAgEAAxkBAAMMaVmsNfyP4EH2JAikdyuhJ8QIHRkAAlEFAAI0vNFG4I0r6duZ84A4BA"
 
-TEXTO_VENDA = (
-    "🔥 GRUPO VIP EXCLUSIVO 🔥\n\n"
-    "✔ Conteúdo diário\n"
-    "✔ Acesso imediato\n\n"
-    "Escolha um plano abaixo 👇"
-)
+TEXTO_VENDA = """
+    🔥 PARAÍSO DAS NOV!NHAS ⁺¹⁸ 🔥
+
+👧 Um grupo cheio de novinhas com conteúdo vazado, garotas safadas que você não encontra em nenhum outro lugar 🕵️
+
+⭐️ Mais de 10.000 VÍDEOS RAROS nunca vistos antes.
+
+👧Garotas dando suas bucetas para o papai
+👧Inc3sto Real
+👧Novinhas tendo cuzinho penetrado
+👧Novinhas exibindo suas bucetas
+👧Novinhas gostosas mamando papai e irmão
+👧Atualizações diárias
+👧Onlyfans e privacy
+E MUITO MAIS...
+
+🚨ATENÇÃO: APENAS HOJE COM 35% DE DESCONTO, AMANHÃ JÁ VOLTA O PREÇO NORMAL 🙀
+
+🗝️PAGOU, ENTROU NO GRUPO (não tem taxa de desbloqueio) 
+❖ Pagamento via Pix 
+🕵️Completamente anônimo, não aparece no extrato.
+ 
+
+👻 GARANTA O SEU ACESSO AGORA 👇
+"""
 
 PLANOS = {
     "mensal": ("Plano Mensal", 29.90),
@@ -124,5 +143,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
