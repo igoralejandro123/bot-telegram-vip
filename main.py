@@ -159,7 +159,7 @@ def start(update: Update, context: CallbackContext):
 # ======================
 
 def enviar_evento_meta(event_name, valor=None):
-    url = f"https://graph.facebook.com/v18.0/2315641305587153/events"
+    url = "https://graph.facebook.com/v18.0/2315641305587153/events"
 
     payload = {
         "data": [{
@@ -172,10 +172,14 @@ def enviar_evento_meta(event_name, valor=None):
                 "value": valor if valor else 0
             }
         }],
-        "access_token": "EAAqaeJvWmy8BQXFE0XOLKX14fqx0RTsr8ZC4mXpxyQUpZCapjypMjaTnwxlF0gKwlvKHIN7nGcEt5XNt7h3WRwLf1EParsRSz6EVyvjrzZB0wjb0bGpZCwzQiYwlwbyb7Dad7tZCDopTELS8kjpwraHzeyJetrUK78FMZAnBDZCwxbuz9vLGxaTK6M6zUiQKwZDZD"
+        "test_event_code": "TEST89462",
+        "access_token": "EAAqaeJvWmy8BQXFE0XOLKX14fqx0RTsr8ZC4mXpxyQUpZCapjypMjaTnwxlF0gKwlvKHIN7nGcEt5XNt7h3WRwLf1EParsRSz6EVyvjrzZB0wjb0bGpZCwzQiYwlwbyb7Dad7tZCDopTELS8kjpwraHzeyJetrUK78FMZAnBDZCwxbuz9vLGxaTK6M6zUiQKwZDZD
+"
     }
 
-    requests.post(url, json=payload, timeout=5)
+    r = requests.post(url, json=payload)
+    print("Resposta Meta:", r.text)
+
 
 
 
@@ -322,6 +326,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
