@@ -1,9 +1,31 @@
+import requests
+import time
 import os
 import psycopg2
 from flask import Flask, request, redirect
 
 app = Flask(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+def enviar_evento_meta(event_name, valor=0):
+    url = "https://graph.facebook.com/v18.0/2315641305587153/events"
+
+    payload = {
+        "data": [{
+            "event_name": event_name,
+            "event_time": int(time.time()),
+            "action_source": "website",
+            "event_source_url": "https://dashboard-production-a6c3.up.railway.app",
+            "custom_data": {
+                "currency": "BRL",
+                "value": valor
+            }
+        }],
+        "access_token": "EAAqaeJvWmy8BQQ2pEGYxRVKX7CV5IwbAzvb3JulC0UtzvSH1UuNORzVLynEmhMchXo1LXVffUjiYEM9XVfh4PMqVDx3dZBqIA22QsbSu35X4APJkuan9SYTuQXZAb2EX87CYFipRJBjFD67GZBlmjDbjs3bqGItk4QnZAbZAHrEZC5gO6ZBvFK5QtQjtdgTCQZDZD"
+    }
+
+    requests.post(url, json=payload, timeout=5)
+
 
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
@@ -234,4 +256,5 @@ def test_meta():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
