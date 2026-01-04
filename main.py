@@ -1,3 +1,5 @@
+import requests
+import hashlib
 import base64
 import io
 import time
@@ -79,6 +81,31 @@ def start(update: Update, context: CallbackContext):
     )
 
 # ======================
+# pixel
+# ======================
+
+def enviar_evento_meta(event_name, valor=None):
+    url = f"https://graph.facebook.com/v18.0/2315641305587153/events"
+
+    payload = {
+        "data": [{
+            "event_name": event_name,
+            "event_time": int(time.time()),
+            "action_source": "chat",
+            "event_source_url": "telegram_bot",
+            "custom_data": {
+                "currency": "BRL",
+                "value": valor if valor else 0
+            }
+        }],
+        "access_token": "EAAqaeJvWmy8BQXFE0XOLKX14fqx0RTsr8ZC4mXpxyQUpZCapjypMjaTnwxlF0gKwlvKHIN7nGcEt5XNt7h3WRwLf1EParsRSz6EVyvjrzZB0wjb0bGpZCwzQiYwlwbyb7Dad7tZCDopTELS8kjpwraHzeyJetrUK78FMZAnBDZCwxbuz9vLGxaTK6M6zUiQKwZDZD"
+    }
+
+    requests.post(url, json=payload, timeout=5)
+
+
+
+# ======================
 # ESCOLHER PLANO
 # ======================
 
@@ -88,6 +115,8 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     plano = query.data
     nome, valor = PLANOS[plano]
+
+    enviar_evento_meta("InitiateCheckout", valor)
 
     payment_data = {
         "transaction_amount": valor,
@@ -156,15 +185,18 @@ def verificar_pagamento(chat_id, context: CallbackContext):
     payment = sdk.payment().get(payment_id)["response"]
 
     if payment["status"] == "approved":
-        context.bot.send_message(
-            chat_id=chat_id,
-            text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
-        )
-    else:
-        context.bot.send_message(
-            chat_id=chat_id,
-            text="⏳ Pagamento ainda não confirmado. Clique novamente em alguns segundos."
-        )
+    enviar_evento_meta("Purchase", payment["transaction_amount"])
+
+    context.bot.send_message(
+        chat_id=chat_id,
+        text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
+    )
+else:
+    context.bot.send_message(
+        chat_id=chat_id,
+        text="⏳ Pagamento ainda não confirmado. Clique novamente em alguns segundos."
+    )
+
 
 
 def verificar_pagamento_manual(update: Update, context: CallbackContext):
@@ -194,6 +226,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
