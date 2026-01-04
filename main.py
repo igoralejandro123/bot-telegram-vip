@@ -185,17 +185,18 @@ def verificar_pagamento(chat_id, context: CallbackContext):
     payment = sdk.payment().get(payment_id)["response"]
 
     if payment["status"] == "approved":
-    enviar_evento_meta("Purchase", payment["transaction_amount"])
+        enviar_evento_meta("Purchase", payment["transaction_amount"])
 
-    context.bot.send_message(
-        chat_id=chat_id,
-        text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
-    )
-else:
-    context.bot.send_message(
-        chat_id=chat_id,
-        text="⏳ Pagamento ainda não confirmado. Clique novamente em alguns segundos."
-    )
+        context.bot.send_message(
+            chat_id=chat_id,
+            text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
+        )
+    else:
+        context.bot.send_message(
+            chat_id=chat_id,
+            text="⏳ Pagamento ainda não confirmado. Clique novamente em alguns segundos."
+        )
+
 
 
 
@@ -226,6 +227,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
