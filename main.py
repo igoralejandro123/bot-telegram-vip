@@ -86,6 +86,26 @@ def criar_tabela_eventos():
     cur.close()
     conn.close()
 
+def criar_tabela_gastos():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS gastos (
+            id SERIAL PRIMARY KEY,
+            data DATE NOT NULL,
+            tipo VARCHAR(20),
+            valor NUMERIC NOT NULL,
+            descricao TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
 def registrar_evento(user_id, event, plano=None, valor=None):
     try:
         conn = get_db_connection()
@@ -291,7 +311,9 @@ def main():
     dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
     dp.add_handler(CallbackQueryHandler(escolher_plano))
 
+    
     criar_tabela_eventos()
+    criar_tabela_gastos()
 
 
     updater.start_polling()
@@ -299,6 +321,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
