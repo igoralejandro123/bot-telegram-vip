@@ -26,6 +26,7 @@ def enviar_evento_meta(event_name, valor=0):
     }
 
 
+
     requests.post(url, json=payload, timeout=5)
 
 
@@ -258,6 +259,7 @@ def test_meta():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
 
