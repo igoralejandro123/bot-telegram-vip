@@ -30,24 +30,67 @@ def dashboard():
         conn.commit()
         return redirect("/")
 
-    # LISTAR GASTOS
+    # RESUMO POR DIA
     cur.execute("""
-        SELECT data, tipo, valor, descricao
-        FROM gastos
-        ORDER BY data DESC
-        LIMIT 20
+        SELECT 
+            d.data,
+            COALESCE(f.faturamento, 0) AS faturamento,
+            COALESCE(g.facebook, 0) AS facebook,
+            COALESCE(g.outros, 0) AS outros
+        FROM (
+            SELECT DISTINCT DATE(created_at) AS data FROM events
+            UNION
+            SELECT DISTINCT data FROM gastos
+        ) d
+        LEFT JOIN (
+            SELECT DATE(created_at) AS data, SUM(valor) AS faturamento
+            FROM events
+            WHERE event = 'purchase'
+            GROUP BY DATE(created_at)
+        ) f ON f.data = d.data
+        LEFT JOIN (
+            SELECT data,
+                SUM(CASE WHEN tipo = 'facebook' THEN valor ELSE 0 END) AS facebook,
+                SUM(CASE WHEN tipo = 'outros' THEN valor ELSE 0 END) AS outros
+            FROM gastos
+            GROUP BY data
+        ) g ON g.data = d.data
+        ORDER BY d.data DESC
+        LIMIT 30
     """)
-    gastos = cur.fetchall()
+
+    resumo = cur.fetchall()
 
     cur.close()
     conn.close()
+
+    linhas = ""
+    for r in resumo:
+        data, faturamento, facebook, outros = r
+        gastos_totais = facebook + outros
+        lucro = faturamento - gastos_totais
+        roi = (lucro / gastos_totais * 100) if gastos_totais > 0 else 0
+
+        linhas += f"""
+        <tr>
+            <td>{data}</td>
+            <td>R$ {faturamento:.2f}</td>
+            <td>R$ {facebook:.2f}</td>
+            <td>R$ {outros:.2f}</td>
+            <td>R$ {gastos_totais:.2f}</td>
+            <td style="color:{'#22c55e' if lucro >= 0 else '#ef4444'}">
+                R$ {lucro:.2f}
+            </td>
+            <td>{roi:.1f}%</td>
+        </tr>
+        """
 
     return f"""
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
-        <title>Dashboard - Gastos</title>
+        <title>Dashboard Financeiro</title>
         <style>
             body {{
                 background:#0f0f12;
@@ -55,7 +98,7 @@ def dashboard():
                 font-family:Arial;
             }}
             .container {{
-                max-width:1000px;
+                max-width:1200px;
                 margin:auto;
                 padding:30px;
             }}
@@ -74,9 +117,8 @@ def dashboard():
             }}
             button {{
                 background:#22c55e;
-                color:#000;
-                cursor:pointer;
                 font-weight:bold;
+                cursor:pointer;
             }}
             table {{
                 width:100%;
@@ -85,13 +127,14 @@ def dashboard():
             th, td {{
                 padding:12px;
                 border-bottom:1px solid #2a2a30;
+                text-align:center;
             }}
             th {{ color:#aaa; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>💸 Controle de Gastos</h1>
+            <h1>📊 Financeiro Diário</h1>
 
             <form method="post">
                 <input type="date" name="data" required>
@@ -107,11 +150,14 @@ def dashboard():
             <table>
                 <tr>
                     <th>Data</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                    <th>Descrição</th>
+                    <th>Faturamento</th>
+                    <th>Facebook</th>
+                    <th>Outros</th>
+                    <th>Gastos Totais</th>
+                    <th>Lucro</th>
+                    <th>ROI</th>
                 </tr>
-                {''.join(f"<tr><td>{g[0]}</td><td>{g[1]}</td><td>R$ {float(g[2]):.2f}</td><td>{g[3] or ''}</td></tr>" for g in gastos)}
+                {linhas}
             </table>
         </div>
     </body>
