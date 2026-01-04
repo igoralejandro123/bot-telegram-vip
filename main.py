@@ -60,6 +60,31 @@ PLANOS = {
 
 sdk = mercadopago.SDK("APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451")
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL)
+
+def criar_tabela_eventos():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS events (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT,
+            event VARCHAR(50),
+            plano VARCHAR(50),
+            valor NUMERIC,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
 # ======================
 # START
 # ======================
@@ -222,6 +247,7 @@ def main():
     dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
     dp.add_handler(CallbackQueryHandler(escolher_plano))
 
+    criar_tabela_eventos()
 
 
     updater.start_polling()
@@ -229,6 +255,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
