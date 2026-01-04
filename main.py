@@ -63,6 +63,8 @@ sdk = mercadopago.SDK("APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446e
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db_connection():
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL não está definido nas Variables do Railway (serviço do BOT).")
     return psycopg2.connect(DATABASE_URL)
 
 def criar_tabela_eventos():
@@ -255,6 +257,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
