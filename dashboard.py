@@ -13,30 +13,62 @@ def dashboard():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # SALVAR GASTO
+    # =========================
+    # SALVAR GASTOS
+    # =========================
     if request.method == "POST":
         data = request.form["data"]
         tipo = request.form["tipo"]
         valor = request.form["valor"]
         descricao = request.form.get("descricao")
 
-        cur.execute(
-            """
+        cur.execute("""
             INSERT INTO gastos (data, tipo, valor, descricao)
             VALUES (%s, %s, %s, %s)
-            """,
-            (data, tipo, valor, descricao)
-        )
+        """, (data, tipo, valor, descricao))
         conn.commit()
         return redirect("/")
 
-    # RESUMO POR DIA
+    # =========================
+    # MÉTRICAS DO BOT
+    # =========================
+    cur.execute("SELECT COUNT(DISTINCT user_id) FROM events")
+    usuarios = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM events WHERE event = 'plan_click'")
+    cliques = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM events WHERE event = 'purchase'")
+    compras = cur.fetchone()[0]
+
+    cur.execute("SELECT COALESCE(SUM(valor), 0) FROM events WHERE event = 'purchase'")
+    faturamento_total = cur.fetchone()[0]
+
+    cur.execute("""
+        SELECT COALESCE(SUM(valor), 0)
+        FROM events
+        WHERE event = 'purchase'
+        AND DATE(created_at) = CURRENT_DATE
+    """)
+    faturamento_hoje = cur.fetchone()[0]
+
+    cur.execute("""
+        SELECT COALESCE(SUM(valor), 0)
+        FROM events
+        WHERE event = 'purchase'
+        AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+    """)
+    faturamento_mes = cur.fetchone()[0]
+
+    # =========================
+    # FINANCEIRO DIÁRIO
+    # =========================
     cur.execute("""
         SELECT 
             d.data,
-            COALESCE(f.faturamento, 0) AS faturamento,
-            COALESCE(g.facebook, 0) AS facebook,
-            COALESCE(g.outros, 0) AS outros
+            COALESCE(f.faturamento, 0),
+            COALESCE(g.facebook, 0),
+            COALESCE(g.outros, 0)
         FROM (
             SELECT DISTINCT DATE(created_at) AS data FROM events
             UNION
@@ -59,25 +91,24 @@ def dashboard():
         LIMIT 30
     """)
 
-    resumo = cur.fetchall()
+    financeiro = cur.fetchall()
 
     cur.close()
     conn.close()
 
-    linhas = ""
-    for r in resumo:
-        data, faturamento, facebook, outros = r
-        gastos_totais = facebook + outros
-        lucro = faturamento - gastos_totais
-        roi = (lucro / gastos_totais * 100) if gastos_totais > 0 else 0
+    linhas_financeiro = ""
+    for d, fat, fb, outros in financeiro:
+        gastos = fb + outros
+        lucro = fat - gastos
+        roi = (lucro / gastos * 100) if gastos > 0 else 0
 
-        linhas += f"""
+        linhas_financeiro += f"""
         <tr>
-            <td>{data}</td>
-            <td>R$ {faturamento:.2f}</td>
-            <td>R$ {facebook:.2f}</td>
+            <td>{d}</td>
+            <td>R$ {fat:.2f}</td>
+            <td>R$ {fb:.2f}</td>
             <td>R$ {outros:.2f}</td>
-            <td>R$ {gastos_totais:.2f}</td>
+            <td>R$ {gastos:.2f}</td>
             <td style="color:{'#22c55e' if lucro >= 0 else '#ef4444'}">
                 R$ {lucro:.2f}
             </td>
@@ -90,7 +121,7 @@ def dashboard():
     <html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
-        <title>Dashboard Financeiro</title>
+        <title>Dashboard Bot Telegram</title>
         <style>
             body {{
                 background:#0f0f12;
@@ -102,12 +133,33 @@ def dashboard():
                 margin:auto;
                 padding:30px;
             }}
-            h1 {{ margin-bottom:20px; }}
+            h1 {{ margin-bottom:30px; }}
+
+            .cards {{
+                display:grid;
+                grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+                gap:20px;
+            }}
+            .card {{
+                background:#1c1c22;
+                padding:20px;
+                border-radius:12px;
+            }}
+            .card h2 {{
+                color:#aaa;
+                font-size:14px;
+            }}
+            .card p {{
+                font-size:28px;
+                margin:10px 0 0;
+                font-weight:bold;
+            }}
+
             form {{
                 background:#1c1c22;
                 padding:20px;
                 border-radius:12px;
-                margin-bottom:40px;
+                margin:40px 0;
             }}
             input, select, button {{
                 padding:10px;
@@ -118,8 +170,8 @@ def dashboard():
             button {{
                 background:#22c55e;
                 font-weight:bold;
-                cursor:pointer;
             }}
+
             table {{
                 width:100%;
                 border-collapse:collapse;
@@ -134,7 +186,16 @@ def dashboard():
     </head>
     <body>
         <div class="container">
-            <h1>📊 Financeiro Diário</h1>
+            <h1>📊 Dashboard — Bot Telegram VIP</h1>
+
+            <div class="cards">
+                <div class="card"><h2>Usuários</h2><p>{usuarios}</p></div>
+                <div class="card"><h2>Cliques</h2><p>{cliques}</p></div>
+                <div class="card"><h2>Compras</h2><p>{compras}</p></div>
+                <div class="card"><h2>Faturamento hoje</h2><p>R$ {faturamento_hoje:.2f}</p></div>
+                <div class="card"><h2>Faturamento mês</h2><p>R$ {faturamento_mes:.2f}</p></div>
+                <div class="card"><h2>Faturamento total</h2><p>R$ {faturamento_total:.2f}</p></div>
+            </div>
 
             <form method="post">
                 <input type="date" name="data" required>
@@ -143,7 +204,7 @@ def dashboard():
                     <option value="outros">Outros gastos</option>
                 </select>
                 <input type="number" step="0.01" name="valor" placeholder="Valor" required>
-                <input type="text" name="descricao" placeholder="Descrição (opcional)">
+                <input type="text" name="descricao" placeholder="Descrição">
                 <button>Salvar gasto</button>
             </form>
 
@@ -153,11 +214,11 @@ def dashboard():
                     <th>Faturamento</th>
                     <th>Facebook</th>
                     <th>Outros</th>
-                    <th>Gastos Totais</th>
+                    <th>Gastos</th>
                     <th>Lucro</th>
                     <th>ROI</th>
                 </tr>
-                {linhas}
+                {linhas_financeiro}
             </table>
         </div>
     </body>
