@@ -46,10 +46,10 @@ E MUITO MAIS...
 """
 
 PLANOS = {
-    "mensal": ("Plano Mensal", 29.90),
-    "trimestral": ("Plano Trimestral", 79.90),
-    "semestral": ("Plano Semestral", 149.90),
-    "vitalicio": ("Plano Vitalício", 299.90),
+    "P1": ("🥉1 MÊS DE ACESSO 🌸", 14.90),
+    "P2": ("🥈1 MÊS DE ACESSO + INC3STO R3AL 🌸👧", 19.90),
+    "P3": ("🥇VITALÍCIO + INC3STO R3AL + 5 GRPS DARK 🌸👧☠️", 29.90),
+    "P4": ("💎 DARK SIDE - TEM DE TUDO 🌸👧☠️😈", 49.90),
 }
 
 sdk = mercadopago.SDK("APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451")
@@ -143,6 +143,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
