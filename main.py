@@ -129,7 +129,7 @@ def escolher_plano(update: Update, context: CallbackContext):
     )
 
     query.message.reply_text(
-        "👉 *Toque na chave PIX acima para copiá-la e pague no seu banco.*\n\n"
+        "👆 *Toque na chave PIX acima para copiá-la e pague no seu banco.*\n\n"
         "‼️ *APÓS O PAGAMENTO, clique no botão abaixo para verificar o pagamento* 👇",
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup([
@@ -153,22 +153,19 @@ def verificar_pagamento(chat_id, context: CallbackContext):
         )
         return
 
-    for _ in range(60):
-        payment = sdk.payment().get(payment_id)["response"]
+    payment = sdk.payment().get(payment_id)["response"]
 
-        if payment["status"] == "approved":
-            context.bot.send_message(
-                chat_id=chat_id,
-                text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
-            )
-            return
+    if payment["status"] == "approved":
+        context.bot.send_message(
+            chat_id=chat_id,
+            text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
+        )
+    else:
+        context.bot.send_message(
+            chat_id=chat_id,
+            text="⏳ Pagamento ainda não confirmado. Clique novamente em alguns segundos."
+        )
 
-        time.sleep(5)
-
-    context.bot.send_message(
-        chat_id=chat_id,
-        text="⏳ Pagamento ainda não identificado. Se já pagou, aguarde alguns minutos e tente novamente."
-    )
 
 def verificar_pagamento_manual(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -197,6 +194,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
