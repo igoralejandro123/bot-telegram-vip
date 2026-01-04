@@ -1,3 +1,5 @@
+import os
+import psycopg2
 import requests
 import hashlib
 import base64
@@ -227,6 +229,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
