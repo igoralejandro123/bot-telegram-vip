@@ -86,6 +86,27 @@ def criar_tabela_eventos():
     cur.close()
     conn.close()
 
+def registrar_evento(user_id, event, plano=None, valor=None):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute(
+            """
+            INSERT INTO events (user_id, event, plano, valor)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (user_id, event, plano, valor)
+        )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print("Erro ao registrar evento:", e)
+
+
+
 
 # ======================
 # START
@@ -93,6 +114,9 @@ def criar_tabela_eventos():
 
 def start(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
+    user_id = update.message.from_user.id
+
+    registrar_evento(user_id, "start")
 
     # ENVIA OS VÍDEOS (autoplay no chat)
     context.bot.send_video(chat_id=chat_id, video=VIDEO_1)
@@ -142,8 +166,14 @@ def escolher_plano(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
 
+    context.user_data["user_id"] = query.from_user.id
+
     plano = query.data
+    context.user_data["plano"] = plano
     nome, valor = PLANOS[plano]
+
+    user_id = query.from_user.id
+    registrar_evento(user_id, "plan_click", plano=plano, valor=valor)
 
     enviar_evento_meta("InitiateCheckout", valor)
 
@@ -216,6 +246,18 @@ def verificar_pagamento(chat_id, context: CallbackContext):
     if payment["status"] == "approved":
         enviar_evento_meta("Purchase", payment["transaction_amount"])
 
+        user_id = context.user_data.get("user_id")
+        plano = context.user_data.get("plano")
+
+        registrar_evento(
+            user_id,
+            "purchase",
+            plano=plano,
+            valor=payment["transaction_amount"]
+        )
+
+
+
         context.bot.send_message(
             chat_id=chat_id,
             text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
@@ -257,6 +299,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
