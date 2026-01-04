@@ -29,6 +29,7 @@ def dashboard():
         conn.commit()
         return redirect("/")
 
+
     # =========================
     # MÉTRICAS DO BOT
     # =========================
@@ -225,5 +226,12 @@ def dashboard():
     </html>
     """
 
+@app.route("/test-meta")
+def test_meta():
+    enviar_evento_meta("Lead")
+    return "Evento Lead enviado"
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
