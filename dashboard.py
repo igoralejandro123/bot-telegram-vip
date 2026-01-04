@@ -21,8 +21,10 @@ def enviar_evento_meta(event_name, valor=0):
                 "value": valor
             }
         }],
+        "test_event_code": "TEST89462",
         "access_token": "EAAqaeJvWmy8BQQ2pEGYxRVKX7CV5IwbAzvb3JulC0UtzvSH1UuNORzVLynEmhMchXo1LXVffUjiYEM9XVfh4PMqVDx3dZBqIA22QsbSu35X4APJkuan9SYTuQXZAb2EX87CYFipRJBjFD67GZBlmjDbjs3bqGItk4QnZAbZAHrEZC5gO6ZBvFK5QtQjtdgTCQZDZD"
     }
+
 
     requests.post(url, json=payload, timeout=5)
 
@@ -256,5 +258,6 @@ def test_meta():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+
 
 
