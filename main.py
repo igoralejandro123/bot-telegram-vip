@@ -173,8 +173,7 @@ def enviar_evento_meta(event_name, valor=None):
             }
         }],
         "test_event_code": "TEST89462",
-        "access_token": "EAAqaeJvWmy8BQXFE0XOLKX14fqx0RTsr8ZC4mXpxyQUpZCapjypMjaTnwxlF0gKwlvKHIN7nGcEt5XNt7h3WRwLf1EParsRSz6EVyvjrzZB0wjb0bGpZCwzQiYwlwbyb7Dad7tZCDopTELS8kjpwraHzeyJetrUK78FMZAnBDZCwxbuz9vLGxaTK6M6zUiQKwZDZD
-"
+        "access_token": "EAAqaeJvWmy8BQXFE0XOLKX14fqx0RTsr8ZC4mXpxyQUpZCapjypMjaTnwxlF0gKwlvKHIN7nGcEt5XNt7h3WRwLf1EParsRSz6EVyvjrzZB0wjb0bGpZCwzQiYwlwbyb7Dad7tZCDopTELS8kjpwraHzeyJetrUK78FMZAnBDZCwxbuz9vLGxaTK6M6zUiQKwZDZD"
     }
 
     r = requests.post(url, json=payload)
@@ -326,6 +325,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
