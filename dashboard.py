@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from flask import Flask
+from flask import Flask, request
 
 app = Flask(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -10,39 +10,72 @@ def get_db_connection():
 
 @app.route("/")
 def dashboard():
+    data_inicio = request.args.get("inicio")
+    data_fim = request.args.get("fim")
+
+    filtro_data = ""
+    params = []
+
+    if data_inicio and data_fim:
+        filtro_data = "AND DATE(created_at) BETWEEN %s AND %s"
+        params = [data_inicio, data_fim]
+
     conn = get_db_connection()
     cur = conn.cursor()
 
-    cur.execute("SELECT COUNT(DISTINCT user_id) FROM events")
+    cur.execute(f"""
+        SELECT COUNT(DISTINCT user_id)
+        FROM events
+        WHERE 1=1 {filtro_data}
+    """, params)
     usuarios = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM events WHERE event = 'plan_click'")
+    cur.execute(f"""
+        SELECT COUNT(*)
+        FROM events
+        WHERE event = 'plan_click' {filtro_data}
+    """, params)
     cliques = cur.fetchone()[0]
 
-    cur.execute("SELECT COUNT(*) FROM events WHERE event = 'purchase'")
+    cur.execute(f"""
+        SELECT COUNT(*)
+        FROM events
+        WHERE event = 'purchase' {filtro_data}
+    """, params)
     compras = cur.fetchone()[0]
 
-    cur.execute("SELECT COALESCE(SUM(valor), 0) FROM events WHERE event = 'purchase'")
+    cur.execute(f"""
+        SELECT COALESCE(SUM(valor),0)
+        FROM events
+        WHERE event = 'purchase' {filtro_data}
+    """, params)
     faturamento_total = cur.fetchone()[0]
 
-    cur.execute("""
-        SELECT COALESCE(SUM(valor), 0)
+    # Ranking de planos
+    cur.execute(f"""
+        SELECT plano, COUNT(*) AS qtd, SUM(valor) AS total
         FROM events
-        WHERE event = 'purchase'
-        AND DATE(created_at) = CURRENT_DATE
-    """)
-    faturamento_hoje = cur.fetchone()[0]
+        WHERE event = 'purchase' {filtro_data}
+        GROUP BY plano
+        ORDER BY total DESC
+    """, params)
+    ranking = cur.fetchall()
 
-    cur.execute("""
-        SELECT COALESCE(SUM(valor), 0)
+    # Gráfico diário
+    cur.execute(f"""
+        SELECT DATE(created_at), COALESCE(SUM(valor),0)
         FROM events
-        WHERE event = 'purchase'
-        AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
-    """)
-    faturamento_mes = cur.fetchone()[0]
+        WHERE event = 'purchase' {filtro_data}
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at)
+    """, params)
+    grafico = cur.fetchall()
 
     cur.close()
     conn.close()
+
+    labels = [str(r[0]) for r in grafico]
+    valores = [float(r[1]) for r in grafico]
 
     return f"""
     <!DOCTYPE html>
@@ -50,127 +83,122 @@ def dashboard():
     <head>
         <meta charset="UTF-8">
         <title>Dashboard Bot Telegram</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <style>
             body {{
-                margin: 0;
-                font-family: Arial, Helvetica, sans-serif;
-                background: #0f0f12;
-                color: #ffffff;
+                background:#0f0f12;
+                color:#fff;
+                font-family:Arial;
+                margin:0;
             }}
             .container {{
-                padding: 30px;
-                max-width: 1200px;
-                margin: auto;
+                max-width:1200px;
+                margin:auto;
+                padding:30px;
             }}
-            h1 {{
-                margin-bottom: 30px;
+            h1 {{ margin-bottom:20px; }}
+            .filters {{
+                margin-bottom:30px;
+            }}
+            input, button {{
+                padding:8px;
+                border-radius:6px;
+                border:none;
+                margin-right:10px;
+            }}
+            button {{
+                background:#4f46e5;
+                color:white;
+                cursor:pointer;
             }}
             .cards {{
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-                gap: 20px;
+                display:grid;
+                grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+                gap:20px;
             }}
             .card {{
-                background: #1c1c22;
-                border-radius: 12px;
-                padding: 20px;
-                box-shadow: 0 0 10px rgba(0,0,0,0.4);
+                background:#1c1c22;
+                padding:20px;
+                border-radius:12px;
             }}
             .card h2 {{
-                font-size: 14px;
-                font-weight: normal;
-                color: #aaaaaa;
+                font-size:14px;
+                color:#aaa;
             }}
             .card p {{
-                font-size: 28px;
-                margin: 10px 0 0;
-                font-weight: bold;
+                font-size:26px;
+                margin-top:10px;
+                font-weight:bold;
             }}
             table {{
-                width: 100%;
-                margin-top: 40px;
-                border-collapse: collapse;
+                width:100%;
+                margin-top:40px;
+                border-collapse:collapse;
             }}
             th, td {{
-                padding: 15px;
-                text-align: left;
+                padding:12px;
+                border-bottom:1px solid #2a2a30;
             }}
-            th {{
-                background: #1c1c22;
-                color: #aaa;
-            }}
-            tr {{
-                border-bottom: 1px solid #2a2a30;
-            }}
-            footer {{
-                margin-top: 40px;
-                text-align: center;
-                color: #666;
-                font-size: 12px;
-            }}
+            th {{ color:#aaa; }}
+            canvas {{ margin-top:40px; }}
         </style>
     </head>
     <body>
         <div class="container">
             <h1>📊 Dashboard — Bot Telegram VIP</h1>
 
+            <form class="filters" method="get">
+                <input type="date" name="inicio" value="{data_inicio or ''}">
+                <input type="date" name="fim" value="{data_fim or ''}">
+                <button>Filtrar</button>
+            </form>
+
             <div class="cards">
-                <div class="card">
-                    <h2>Usuários únicos</h2>
-                    <p>{usuarios}</p>
-                </div>
-                <div class="card">
-                    <h2>Cliques nos planos</h2>
-                    <p>{cliques}</p>
-                </div>
-                <div class="card">
-                    <h2>Compras realizadas</h2>
-                    <p>{compras}</p>
-                </div>
-                <div class="card">
-                    <h2>Faturamento hoje</h2>
-                    <p>R$ {faturamento_hoje:.2f}</p>
-                </div>
-                <div class="card">
-                    <h2>Faturamento do mês</h2>
-                    <p>R$ {faturamento_mes:.2f}</p>
-                </div>
-                <div class="card">
-                    <h2>Faturamento total</h2>
-                    <p>R$ {faturamento_total:.2f}</p>
-                </div>
+                <div class="card"><h2>Usuários</h2><p>{usuarios}</p></div>
+                <div class="card"><h2>Cliques</h2><p>{cliques}</p></div>
+                <div class="card"><h2>Compras</h2><p>{compras}</p></div>
+                <div class="card"><h2>Faturamento</h2><p>R$ {faturamento_total:.2f}</p></div>
             </div>
 
+            <h2 style="margin-top:40px;">🏆 Ranking de Planos</h2>
             <table>
-                <thead>
-                    <tr>
-                        <th>Métrica</th>
-                        <th>Valor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Usuários</td>
-                        <td>{usuarios}</td>
-                    </tr>
-                    <tr>
-                        <td>Cliques</td>
-                        <td>{cliques}</td>
-                    </tr>
-                    <tr>
-                        <td>Compras</td>
-                        <td>{compras}</td>
-                    </tr>
-                </tbody>
+                <tr><th>Plano</th><th>Vendas</th><th>Faturamento</th></tr>
+                {''.join(f"<tr><td>{r[0]}</td><td>{r[1]}</td><td>R$ {float(r[2]):.2f}</td></tr>" for r in ranking)}
             </table>
 
-            <footer>
-                Dashboard interno • Atualizado em tempo real
-            </footer>
+            <h2 style="margin-top:40px;">📈 Faturamento Diário</h2>
+            <canvas id="grafico"></canvas>
         </div>
+
+        <script>
+            const ctx = document.getElementById('grafico');
+            new Chart(ctx, {{
+                type: 'line',
+                data: {{
+                    labels: {labels},
+                    datasets: [{{
+                        label: 'Faturamento',
+                        data: {valores},
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79,70,229,0.2)',
+                        tension: 0.3,
+                        fill: true
+                    }}]
+                }},
+                options: {{
+                    plugins: {{
+                        legend: {{ labels: {{ color: 'white' }} }}
+                    }},
+                    scales: {{
+                        x: {{ ticks: {{ color: 'white' }} }},
+                        y: {{ ticks: {{ color: 'white' }} }}
+                    }}
+                }}
+            }});
+        </script>
     </body>
     </html>
     """
-    
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
