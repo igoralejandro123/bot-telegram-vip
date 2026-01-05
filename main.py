@@ -2,10 +2,7 @@ import os
 import psycopg2
 import requests
 import hashlib
-import base64
-import io
 import time
-import mercadopago
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     Updater,
@@ -18,12 +15,59 @@ from telegram.ext import (
 # CONFIGURAÇÕES
 # ======================
 
-BOT_TOKEN = "8384065109:AAG_LENnHaSV54HMWSq-k0lbWB4cPT9rMCo"
-MP_ACCESS_TOKEN = "APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 
 VIDEO_1 = "BAACAgEAAxkBAAMKaVmsE6uLzN1eavu9LbmwGTcy9nkAAlAFAAI0vNFGSOpp8seZaPo4BA"
 VIDEO_2 = "BAACAgEAAxkBAAMMaVmsNfyP4EH2JAikdyuhJ8QIHRkAAlEFAAI0vNFG4I0r6duZ84A4BA"
+
+SYNCPAY_CLIENT_ID = os.getenv("SYNCPAY_CLIENT_ID")
+SYNCPAY_CLIENT_SECRET = os.getenv("SYNCPAY_CLIENT_SECRET")
+
+def syncpay_get_token():
+    url = "https://syncpay.com.br/api/partner/v1/auth-token"
+    payload = {
+        "client_id": SYNCPAY_CLIENT_ID,
+        "client_secret": SYNCPAY_CLIENT_SECRET
+    }
+    r = requests.post(url, json=payload, timeout=15)
+    r.raise_for_status()
+    return r.json()["access_token"]
+
+def syncpay_create_cashin(amount, description):
+    token = syncpay_get_token()
+    url = "https://syncpay.com.br/api/partner/v1/cash-in"
+    payload = {
+        "amount": float(amount),
+        "description": description,
+        "client": {
+            "name": "Cliente",
+            "cpf": "00000000000",
+            "email": "cliente@telegram.com",
+            "phone": "00000000000"
+        }
+    }
+    r = requests.post(
+        url,
+        json=payload,
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=15
+    )
+    r.raise_for_status()
+    data = r.json()
+    return data["pix_code"], data["identifier"]
+
+def syncpay_get_transaction(identifier):
+    token = syncpay_get_token()
+    url = f"https://syncpay.com.br/api/partner/v1/transaction/{identifier}"
+    r = requests.get(
+        url,
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=15
+    )
+    r.raise_for_status()
+    return r.json()["data"]
+
 
 TEXTO_VENDA = """
     🔥 PARAÍSO DAS N0V!NH@ S ⁺¹⁸ 🔥
@@ -59,7 +103,6 @@ PLANOS = {
     "P4": ("💎 DARK SIDE - TEM DE TUDO 🌸👧☠️😈", 49.90),
 }
 
-sdk = mercadopago.SDK("APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -203,53 +246,33 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     enviar_evento_meta("InitiateCheckout", user_id=user_id, valor=valor)
 
-    payment_data = {
-        "transaction_amount": valor,
-        "description": nome,
-        "payment_method_id": "pix",
-        "payer": {"email": "comprador@telegram.com"}
-    }
+    pix_code, identifier = syncpay_create_cashin(
+        amount=valor,
+        description=nome
+    )
 
-    payment = sdk.payment().create(payment_data)["response"]
-    context.user_data["payment_id"] = payment["id"]
+    context.user_data["payment_id"] = identifier
 
-
-    pix_data = payment["point_of_interaction"]["transaction_data"]
-    pix_code = pix_data["qr_code"]
-    qr_base64 = pix_data["qr_code_base64"]
-
-    qr_bytes = base64.b64decode(qr_base64)
-    qr_image = io.BytesIO(qr_bytes)
-    qr_image.name = "qrcode.png"
-
-    query.message.reply_photo(
-        photo=qr_image,
-        caption=(
-            f"💳 *{nome}*\n"
-            f"💰 *Valor:* R$ {valor}\n\n"
-            "💠 *Como realizar o pagamento:*\n\n"
-            "1️⃣ Abra o aplicativo do seu banco.\n"
-            "2️⃣ Selecione a opção *Pagar* ou *PIX*.\n"
-            "3️⃣ Escolha *PIX Copia e Cola*.\n"
-            "4️⃣ Cole o código abaixo e finalize o pagamento com segurança.\n\n"
-            "⬇️ *PIX Copia e Cola:*"
-        ),
+    query.message.reply_text(
+        f"*💳 {nome}*\n"
+        f"*💰 Valor:* R$ {valor}\n\n"
+        "⬇️ *PIX Copia e Cola:*",
         parse_mode="Markdown"
     )
 
     query.message.reply_text(
         f"`{pix_code}`",
-        parse_mode="Markdown",
+        parse_mode="Markdown"
     )
 
     query.message.reply_text(
-        "👆 *Toque na chave PIX acima para copiá-la e pague no seu banco.*\n\n"
-        "‼️ *APÓS O PAGAMENTO, clique no botão abaixo para verificar o pagamento* 👇",
-        parse_mode="Markdown",
+        "👆 Copie a chave PIX acima e realize o pagamento.\n\n"
+        "Após pagar, clique abaixo 👇",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ VERIFICAR PAGAMENTO", callback_data="verificar_pagamento")]
         ])
     )
+
 
 
 
@@ -267,30 +290,25 @@ def verificar_pagamento(chat_id, context: CallbackContext):
         )
         return
 
-    payment = sdk.payment().get(payment_id)["response"]
+    tx = syncpay_get_transaction(payment_id)
 
-    if payment["status"] == "approved":
+    if tx.get("status") == "completed":
         user_id = context.user_data.get("user_id")
+        plano = context.user_data.get("plano")
+        valor_pago = tx.get("amount", 0)
 
         enviar_evento_meta(
             "Purchase",
             user_id=user_id,
-            valor=payment["transaction_amount"]
+            valor=valor_pago
         )
-
-
-
-        user_id = context.user_data.get("user_id")
-        plano = context.user_data.get("plano")
 
         registrar_evento(
             user_id,
             "purchase",
             plano=plano,
-            valor=payment["transaction_amount"]
+            valor=valor_pago
         )
-
-
 
         context.bot.send_message(
             chat_id=chat_id,
@@ -301,7 +319,6 @@ def verificar_pagamento(chat_id, context: CallbackContext):
             chat_id=chat_id,
             text="⏳ Pagamento ainda não confirmado. Clique novamente em alguns segundos."
         )
-
 
 
 
@@ -335,6 +352,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
