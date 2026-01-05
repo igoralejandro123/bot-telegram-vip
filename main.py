@@ -165,8 +165,8 @@ def enviar_evento_meta(event_name, user_id=None, valor=None):
         "data": [{
             "event_name": event_name,
             "event_time": int(time.time()),
-            "action_source": "chat",
-            "event_source_url": "https://t.me/seu_bot",
+            "action_source": "website",
+            "event_source_url": "https://dashboard-production-a6c3.up.railway.app",
             "custom_data": {
                 "currency": "BRL",
                 "value": float(valor or 0)
@@ -334,6 +334,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
