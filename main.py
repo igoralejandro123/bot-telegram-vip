@@ -137,7 +137,7 @@ def start(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
 
     registrar_evento(user_id, "start")
-    enviar_evento_meta("Lead")
+    enviar_evento_meta("Lead", user_id=user_id)
 
     # ENVIA OS VÍDEOS (autoplay no chat)
     context.bot.send_video(chat_id=chat_id, video=VIDEO_1)
@@ -158,7 +158,7 @@ def start(update: Update, context: CallbackContext):
 # pixel
 # ======================
 
-def enviar_evento_meta(event_name, valor=None):
+def enviar_evento_meta(event_name, user_id=None, valor=None):
     url = "https://graph.facebook.com/v18.0/2315641305587153/events"
 
     payload = {
@@ -166,19 +166,20 @@ def enviar_evento_meta(event_name, valor=None):
             "event_name": event_name,
             "event_time": int(time.time()),
             "action_source": "chat",
-            "event_source_url": "telegram_bot",
+            "event_source_url": "https://t.me/seu_bot",
             "custom_data": {
                 "currency": "BRL",
-                "value": valor if valor else 0
+                "value": float(valor or 0)
+            },
+            "user_data": {
+                "external_id": hashlib.sha256(str(user_id).encode()).hexdigest()
             }
         }],
-        "test_event_code": "TEST89462",
-        "access_token": "EAAqaeJvWmy8BQXFE0XOLKX14fqx0RTsr8ZC4mXpxyQUpZCapjypMjaTnwxlF0gKwlvKHIN7nGcEt5XNt7h3WRwLf1EParsRSz6EVyvjrzZB0wjb0bGpZCwzQiYwlwbyb7Dad7tZCDopTELS8kjpwraHzeyJetrUK78FMZAnBDZCwxbuz9vLGxaTK6M6zUiQKwZDZD"
+        "access_token": "EAAqaeJvWmy8BQQ2pEGYxRVKX7CV5IwbAzvb3JulC0UtzvSH1UuNORzVLynEmhMchXo1LXVffUjiYEM9XVfh4PMqVDx3dZBqIA22QsbSu35X4APJkuan9SYTuQXZAb2EX87CYFipRJBjFD67GZBlmjDbjs3bqGItk4QnZAbZAHrEZC5gO6ZBvFK5QtQjtdgTCQZDZD"
     }
 
     r = requests.post(url, json=payload)
-    print("Resposta Meta:", r.text)
-
+    print("META:", r.status_code, r.text)
 
 
 
@@ -199,7 +200,7 @@ def escolher_plano(update: Update, context: CallbackContext):
     user_id = query.from_user.id
     registrar_evento(user_id, "plan_click", plano=plano, valor=valor)
 
-    enviar_evento_meta("InitiateCheckout", valor)
+    enviar_evento_meta("InitiateCheckout", user_id=user_id, valor=valor)
 
     payment_data = {
         "transaction_amount": valor,
@@ -268,7 +269,15 @@ def verificar_pagamento(chat_id, context: CallbackContext):
     payment = sdk.payment().get(payment_id)["response"]
 
     if payment["status"] == "approved":
-        enviar_evento_meta("Purchase", payment["transaction_amount"])
+        user_id = context.user_data.get("user_id")
+
+        enviar_evento_meta(
+            "Purchase",
+            user_id=user_id,
+            valor=payment["transaction_amount"]
+        )
+
+
 
         user_id = context.user_data.get("user_id")
         plano = context.user_data.get("plano")
@@ -325,6 +334,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
