@@ -18,6 +18,9 @@ from telegram.ext import (
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 
+# context.bot.send_video(chat_id=chat_id, video=VIDEO_1)
+# context.bot.send_video(chat_id=chat_id, video=VIDEO_2)
+
 VIDEO_1 = "BAACAgEAAxkBAAMKaVmsE6uLzN1eavu9LbmwGTcy9nkAAlAFAAI0vNFGSOpp8seZaPo4BA"
 VIDEO_2 = "BAACAgEAAxkBAAMMaVmsNfyP4EH2JAikdyuhJ8QIHRkAAlEFAAI0vNFG4I0r6duZ84A4BA"
 
@@ -352,6 +355,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
