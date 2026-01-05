@@ -18,7 +18,7 @@ from telegram.ext import (
 # CONFIGURAÇÕES
 # ======================
 
-BOT_TOKEN = "8337535041:AAFyfor-WYhKL5wG6ct3VarJ5Y8i-MddLrU"
+BOT_TOKEN = "8384065109:AAG_LENnHaSV54HMWSq-k0lbWB4cPT9rMCo"
 MP_ACCESS_TOKEN = "APP_USR-6292592654909636-122507-7c4203a2f6ce5376e87d2446eb46a5ee-247711451"
 LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 
@@ -26,26 +26,27 @@ VIDEO_1 = "BAACAgEAAxkBAAMKaVmsE6uLzN1eavu9LbmwGTcy9nkAAlAFAAI0vNFGSOpp8seZaPo4B
 VIDEO_2 = "BAACAgEAAxkBAAMMaVmsNfyP4EH2JAikdyuhJ8QIHRkAAlEFAAI0vNFG4I0r6duZ84A4BA"
 
 TEXTO_VENDA = """
-    🔥 PARAÍSO DAS NOV!NHAS ⁺¹⁸ 🔥
+    🔥 PARAÍSO DAS N0V!NH@ S ⁺¹⁸ 🔥
 
-👧 Um grupo cheio de novinhas com conteúdo vazado, garotas safadas que você não encontra em nenhum outro lugar 🕵️
+👧 Um grupo cheio de nov!nh@s com conteúdo v@z4do, g4rot@s saf@das que você não encontra em nenhum outro lugar 🕵️
 
 ⭐️ Mais de 10.000 VÍDEOS RAROS nunca vistos antes.
 
-👧Garotas dando suas bucetas para o papai
-👧Inc3sto Real
-👧Novinhas tendo cuzinho penetrado
-👧Novinhas exibindo suas bucetas
-👧Novinhas gostosas mamando papai e irmão
-👧Atualizações diárias
-👧Onlyfans e privacy
+🔥D@ndo buc3t@s para o p@pai
+🔥Inc3st0 R3al
+🔥Tendo cuz!nh0 penetr@do
+🔥Exibindo suas buc3t@s
+🔥M@mand0 p@pai e !rmão
+🔥Atualizações diárias
+🔥Onlyf@ns e priv@cy
 E MUITO MAIS...
 
 🚨ATENÇÃO: APENAS HOJE COM 35% DE DESCONTO, AMANHÃ JÁ VOLTA O PREÇO NORMAL 🙀
 
-🗝️PAGOU, ENTROU NO GRUPO (não tem taxa de desbloqueio) 
+🗝️PAGOU, ENTROU NO GRUPO VIP 
 ❖ Pagamento via Pix 
 🕵️Completamente anônimo, não aparece no extrato.
+
  
 
 👻 GARANTA O SEU ACESSO AGORA 👇
@@ -53,8 +54,8 @@ E MUITO MAIS...
 
 PLANOS = {
     "P1": ("🥉1 MÊS DE ACESSO 🌸", 14.90),
-    "P2": ("🥈1 MÊS DE ACESSO + INC3STO R3AL 🌸👧", 19.90),
-    "P3": ("🥇VITALÍCIO + INC3STO R3AL + 5 GRPS DARK 🌸👧☠️", 29.90),
+    "P2": ("🥈1 MÊS DE ACESSO + !NC3ST0 R3AL 🌸👧", 19.90),
+    "P3": ("🥇VITALÍCIO + !NC3ST0 R3AL + 5 GRPS DARK 🌸👧☠️", 29.90),
     "P4": ("💎 DARK SIDE - TEM DE TUDO 🌸👧☠️😈", 49.90),
 }
 
@@ -334,6 +335,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
