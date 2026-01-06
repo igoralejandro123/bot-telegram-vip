@@ -340,7 +340,12 @@ def verificar_pagamento_manual(update: Update, context: CallbackContext):
 
 def main():
     updater = Updater(BOT_TOKEN, use_context=True)
+
+    # 🔥 LINHA NOVA (OBRIGATÓRIA)
+    updater.bot.delete_webhook(drop_pending_updates=True)
+
     dp = updater.dispatcher
+
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
@@ -357,6 +362,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
