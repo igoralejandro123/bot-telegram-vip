@@ -407,7 +407,8 @@ def main():
 
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
-    dp.add_handler(CallbackQueryHandler(escolher_plano))
+    dp.add_handler(CallbackQueryHandler(escolher_plano, pattern="^P[1-4]$"))
+
 
     
     criar_tabela_eventos()
@@ -420,6 +421,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
