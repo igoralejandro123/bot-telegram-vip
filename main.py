@@ -22,8 +22,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 
 
-VIDEO_1 = "BAACAgEAAxkBAAMKaVmsE6uLzN1eavu9LbmwGTcy9nkAAlAFAAI0vNFGSOpp8seZaPo4BA"
-VIDEO_2 = "BAACAgEAAxkBAAMMaVmsNfyP4EH2JAikdyuhJ8QIHRkAAlEFAAI0vNFG4I0r6duZ84A4BA"
+VIDEO_1 = "BAACAgEAAxkBAAMMaVxtBmtQMa6p__yi7rTFF79AXagAAn4GAAIPieFG4ZCWKEzzv404BA"
+VIDEO_2 = "BAACAgEAAxkBAAMQaVxtaUOwPdcwHDp2kgqGn2DoOqsAAn8GAAIPieFGhjEDHYsmd8c4BA"
 
 SYNCPAY_CLIENT_ID = os.getenv("SYNCPAY_CLIENT_ID")
 SYNCPAY_CLIENT_SECRET = os.getenv("SYNCPAY_CLIENT_SECRET")
@@ -189,8 +189,8 @@ def start(update: Update, context: CallbackContext):
     
 
     # ENVIA OS VÍDEOS (autoplay no chat)
-    #context.bot.send_video(chat_id=chat_id, video=VIDEO_1)
-    #context.bot.send_video(chat_id=chat_id, video=VIDEO_2)
+    context.bot.send_video(chat_id=chat_id, video=VIDEO_1)
+    context.bot.send_video(chat_id=chat_id, video=VIDEO_2)
 
     keyboard = [
         [InlineKeyboardButton(f"{nome} - R$ {valor}", callback_data=plano)]
@@ -334,19 +334,6 @@ def verificar_pagamento_manual(update: Update, context: CallbackContext):
     verificar_pagamento(query.message.chat_id, context)
 
 
-def ativar_fileid(update: Update, context: CallbackContext):
-    context.user_data["esperando_video_fileid"] = True
-    update.message.reply_text("✅ Ok! Agora envie o VÍDEO aqui que eu te devolvo o FILE_ID.")
-
-def pegar_fileid_video(update: Update, context: CallbackContext):
-    if not context.user_data.get("esperando_video_fileid"):
-        return
-
-    if update.message.video:
-        context.user_data["esperando_video_fileid"] = False
-        update.message.reply_text(f"FILE_ID:\n{update.message.video.file_id}")
-    else:
-        update.message.reply_text("⚠️ Isso não é vídeo. Envie um VÍDEO.")
 
 
 
@@ -366,8 +353,6 @@ def main():
 
 
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("fileid", ativar_fileid))
-    dp.add_handler(MessageHandler(Filters.video, pegar_fileid_video))
     dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
     dp.add_handler(CallbackQueryHandler(escolher_plano))
 
@@ -382,6 +367,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
