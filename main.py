@@ -265,9 +265,7 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     user_id = query.from_user.id
     registrar_evento(user_id, "plan_click", plano=plano, valor=valor)
-
     enviar_evento_meta("InitiateCheckout", user_id=user_id, valor=valor)
-
 
     try:
         pix_code, qr_base64, identifier = mp_criar_pix(valor, nome)
@@ -282,16 +280,16 @@ def escolher_plano(update: Update, context: CallbackContext):
     qr_img = base64.b64decode(qr_base64)
     qr_buffer = BytesIO(qr_img)
 
+    # QR CODE
     query.message.reply_photo(
         photo=qr_buffer,
-        parse_mode="Markdown"
+        caption="📸 QR Code PIX"
     )
 
-
-
+    # Salva pagamento
     context.user_data["payment_id"] = identifier
 
-        # verifica pagamento automaticamente a cada 15 segundos
+    # Verificação automática
     context.job_queue.run_repeating(
         verificar_pagamento_automatico,
         interval=15,
@@ -300,30 +298,22 @@ def escolher_plano(update: Update, context: CallbackContext):
         name=str(identifier)
     )
 
-
+    # TEXTO
     query.message.reply_text(
-    f"""
-     *{nome}*
-    💰 *Valor:* R$ {valor}
-
-    ❖ *Como realizar o pagamento:*
-    
-    1️⃣ Abra o app do seu banco  
-    2️⃣ Selecione *PIX* ou *Pagar*  
-    3️⃣ Escolha *PIX Copia e Cola*
-    4️⃣ Cole o código abaixo no seu banco
-
-    👇 *Copie o código pix abaixo:*
-    """,
-        parse_mode="Markdown"
+        f"{nome}\n"
+        f"💰 Valor: R$ {valor}\n\n"
+        "❖ Como realizar o pagamento:\n"
+        "1️⃣ Abra o app do seu banco\n"
+        "2️⃣ Selecione PIX ou Pagar\n"
+        "3️⃣ Escolha PIX Copia e Cola\n"
+        "4️⃣ Cole o código abaixo\n\n"
+        "👇 Copie o código PIX abaixo:"
     )
 
+    # CÓDIGO PIX
+    query.message.reply_text(pix_code)
 
-    query.message.reply_text(
-        f"`{pix_code}`",
-        parse_mode="Markdown"
-    )
-
+    # BOTÃO
     query.message.reply_text(
         "👆 Copie a chave PIX acima e realize o pagamento.\n\n"
         "Após pagar, verifique abaixo 👇",
@@ -331,6 +321,7 @@ def escolher_plano(update: Update, context: CallbackContext):
             [InlineKeyboardButton("✅ VERIFICAR PAGAMENTO", callback_data="verificar_pagamento")]
         ])
     )
+
 
 
 
@@ -419,6 +410,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
