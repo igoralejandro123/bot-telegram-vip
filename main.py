@@ -184,12 +184,10 @@ def start(update: Update, context: CallbackContext):
     registrar_evento(user_id, "start")
     enviar_evento_meta("Lead", user_id=user_id)
     
-    # context.bot.send_video(chat_id=chat_id, video=VIDEO_1)
-    # context.bot.send_video(chat_id=chat_id, video=VIDEO_2)
 
     # ENVIA OS VÍDEOS (autoplay no chat)
-    context.bot.send_video(chat_id=chat_id, video=VIDEO_1)
-    context.bot.send_video(chat_id=chat_id, video=VIDEO_2)
+    #context.bot.send_video(chat_id=chat_id, video=VIDEO_1)
+    #context.bot.send_video(chat_id=chat_id, video=VIDEO_2)
 
     keyboard = [
         [InlineKeyboardButton(f"{nome} - R$ {valor}", callback_data=plano)]
@@ -362,6 +360,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
