@@ -352,10 +352,12 @@ def main():
 
 
     updater.start_polling(drop_pending_updates=True)
+    print("BOT INICIADO COM SUCESSO")
     updater.idle()
 
 if __name__ == "__main__":
     main()
+
 
 
 
