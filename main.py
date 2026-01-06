@@ -3,6 +3,7 @@ import psycopg2
 import requests
 import hashlib
 import time
+import mercadopago
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     Updater,
@@ -24,53 +25,6 @@ LINK_GRUPO_VIP = "https://t.me/+yInsORz5ZKQ3MzUx"
 
 VIDEO_1 = "BAACAgEAAxkBAAMMaVxtBmtQMa6p__yi7rTFF79AXagAAn4GAAIPieFG4ZCWKEzzv404BA"
 VIDEO_2 = "BAACAgEAAxkBAAMQaVxtaUOwPdcwHDp2kgqGn2DoOqsAAn8GAAIPieFGhjEDHYsmd8c4BA"
-
-SYNCPAY_CLIENT_ID = os.getenv("SYNCPAY_CLIENT_ID")
-SYNCPAY_CLIENT_SECRET = os.getenv("SYNCPAY_CLIENT_SECRET")
-
-def syncpay_get_token():
-    url = "https://syncpay.com.br/api/partner/v1/auth-token"
-    payload = {
-        "client_id": SYNCPAY_CLIENT_ID,
-        "client_secret": SYNCPAY_CLIENT_SECRET
-    }
-    r = requests.post(url, json=payload, timeout=15)
-    r.raise_for_status()
-    return r.json()["access_token"]
-
-def syncpay_create_cashin(amount, description):
-    token = syncpay_get_token()
-    url = "https://syncpay.com.br/api/partner/v1/cash-in"
-    payload = {
-        "amount": float(amount),
-        "description": description,
-        "client": {
-            "name": "Cliente",
-            "cpf": "00000000000",
-            "email": "cliente@telegram.com",
-            "phone": "00000000000"
-        }
-    }
-    r = requests.post(
-        url,
-        json=payload,
-        headers={"Authorization": f"Bearer {token}"},
-        timeout=15
-    )
-    r.raise_for_status()
-    data = r.json()
-    return data["pix_code"], data["identifier"]
-
-def syncpay_get_transaction(identifier):
-    token = syncpay_get_token()
-    url = f"https://syncpay.com.br/api/partner/v1/transaction/{identifier}"
-    r = requests.get(
-        url,
-        headers={"Authorization": f"Bearer {token}"},
-        timeout=15
-    )
-    r.raise_for_status()
-    return r.json()["data"]
 
 
 TEXTO_VENDA = """
@@ -230,6 +184,29 @@ def enviar_evento_meta(event_name, user_id=None, valor=None):
     r = requests.post(url, json=payload)
     print("META:", r.status_code, r.text)
 
+mp = mercadopago.SDK(os.getenv("MERCADO_PAGO_ACCESS_TOKEN"))
+
+def mp_criar_pix(valor, descricao):
+    payment_data = {
+        "transaction_amount": float(valor),
+        "description": descricao,
+        "payment_method_id": "pix",
+        "payer": {
+            "email": "cliente@telegram.com"
+        }
+    }
+
+    payment = mp.payment().create(payment_data)
+    pix_code = payment["response"]["point_of_interaction"]["transaction_data"]["qr_code"]
+    payment_id = payment["response"]["id"]
+
+    return pix_code, payment_id
+
+def mp_pagamento_aprovado(payment_id):
+    payment = mp.payment().get(payment_id)
+    status = payment["response"]["status"]
+    return status == "approved", payment["response"]
+
 
 
 # ======================
@@ -252,13 +229,11 @@ def escolher_plano(update: Update, context: CallbackContext):
     enviar_evento_meta("InitiateCheckout", user_id=user_id, valor=valor)
 
     try:
-        pix_code, identifier = syncpay_create_cashin(
-            amount=valor,
-            description=nome
-        )
+        pix_code, identifier = mp_criar_pix(valor, nome)
+        
     except Exception as e:
         query.message.reply_text("❌ Erro ao gerar PIX. Tente novamente mais tarde.")
-        print("ERRO SYNCPAY:", e)
+        print("ERRO MERCADO PAGO:", e)
         return
 
 
@@ -297,22 +272,16 @@ def verificar_pagamento(chat_id, context: CallbackContext):
     if not payment_id:
         context.bot.send_message(
             chat_id=chat_id,
-            text="⚠️ Nenhum pagamento encontrado para verificar."
+            text="⚠️ Nenhum pagamento encontrado."
         )
         return
 
-    tx = syncpay_get_transaction(payment_id)
+    aprovado, dados = mp_pagamento_aprovado(payment_id)
 
-    if tx.get("status") == "completed":
+    if aprovado:
         user_id = context.user_data.get("user_id")
         plano = context.user_data.get("plano")
-        valor_pago = tx.get("amount", 0)
-
-        enviar_evento_meta(
-            "Purchase",
-            user_id=user_id,
-            valor=valor_pago
-        )
+        valor_pago = dados.get("transaction_amount", 0)
 
         registrar_evento(
             user_id,
@@ -321,15 +290,22 @@ def verificar_pagamento(chat_id, context: CallbackContext):
             valor=valor_pago
         )
 
+        enviar_evento_meta(
+            "Purchase",
+            user_id=user_id,
+            valor=valor_pago
+        )
+
         context.bot.send_message(
             chat_id=chat_id,
-            text=f"✅ Pagamento confirmado!\n\nAcesse o grupo:\n{LINK_GRUPO_VIP}"
+            text=f"✅ Pagamento confirmado!\n\nAcesse o grupo VIP:\n{LINK_GRUPO_VIP}"
         )
     else:
         context.bot.send_message(
             chat_id=chat_id,
-            text="⏳ Pagamento ainda não confirmado. Clique novamente em alguns segundos."
+            text="⏳ Pagamento ainda não confirmado. Tente novamente em alguns segundos."
         )
+
 
 
 
@@ -338,9 +314,6 @@ def verificar_pagamento_manual(update: Update, context: CallbackContext):
     query.answer("Verificando pagamento... ⏳")
 
     verificar_pagamento(query.message.chat_id, context)
-
-
-
 
 
 
@@ -373,6 +346,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
