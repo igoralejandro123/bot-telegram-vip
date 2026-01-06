@@ -169,7 +169,8 @@ def enviar_evento_meta(event_name, user_id=None, valor=None):
             "event_name": event_name,
             "event_time": int(time.time()),
             "event_id": f"{event_name}_{user_id}_{int(time.time())}",
-            "action_source": "chat",
+            "action_source": "website",
+            "event_source_url": "https://t.me/AcesseAqui1_bot",  # pode ser qualquer URL válida
             "custom_data": {
                 "currency": "BRL",
                 "value": float(valor or 0)
@@ -178,11 +179,13 @@ def enviar_evento_meta(event_name, user_id=None, valor=None):
                 "external_id": hashlib.sha256(str(user_id).encode()).hexdigest()
             }
         }],
+        "test_event_code": "TEST12345",  # use o código do Gerenciador de Eventos
         "access_token": os.getenv("META_ACCESS_TOKEN")
     }
 
     r = requests.post(url, json=payload)
     print("META:", r.status_code, r.text)
+
 
 
 mp = mercadopago.SDK(os.getenv("MERCADO_PAGO_ACCESS_TOKEN"))
@@ -392,6 +395,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
