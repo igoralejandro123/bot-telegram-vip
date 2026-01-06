@@ -139,7 +139,7 @@ def start(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
 
     registrar_evento(user_id, "start")
-    enviar_evento_meta("StartBot", user_id=user_id)
+    enviar_evento_meta("Lead", user_id=user_id)
     
 
     # ENVIA OS VÍDEOS (autoplay no chat)
@@ -392,6 +392,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
