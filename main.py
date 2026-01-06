@@ -197,10 +197,14 @@ def mp_criar_pix(valor, descricao):
     }
 
     payment = mp.payment().create(payment_data)
-    pix_code = payment["response"]["point_of_interaction"]["transaction_data"]["qr_code"]
-    payment_id = payment["response"]["id"]
+    response = payment["response"]
 
-    return pix_code, payment_id
+    pix_code = response["point_of_interaction"]["transaction_data"]["qr_code"]
+    qr_base64 = response["point_of_interaction"]["transaction_data"]["qr_code_base64"]
+    payment_id = response["id"]
+
+    return pix_code, qr_base64, payment_id
+
 
 def mp_pagamento_aprovado(payment_id):
     payment = mp.payment().get(payment_id)
@@ -228,8 +232,21 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     enviar_evento_meta("InitiateCheckout", user_id=user_id, valor=valor)
 
+    import base64
+    from io import BytesIO
+
+    qr_img = base64.b64decode(qr_base64)
+    qr_buffer = BytesIO(qr_img)
+
+    query.message.reply_photo(
+        photo=qr_buffer,
+        caption="📸 *Escaneie o QR Code acima para pagar via PIX*",
+        parse_mode="Markdown"
+    )
+
+
     try:
-        pix_code, identifier = mp_criar_pix(valor, nome)
+        pix_code, qr_base64, identifier = mp_criar_pix(valor, nome)
         
     except Exception as e:
         query.message.reply_text("❌ Erro ao gerar PIX. Tente novamente mais tarde.")
@@ -240,11 +257,20 @@ def escolher_plano(update: Update, context: CallbackContext):
     context.user_data["payment_id"] = identifier
 
     query.message.reply_text(
-        f"*💳 {nome}*\n"
-        f"*💰 Valor:* R$ {valor}\n\n"
-        "⬇️ *PIX Copia e Cola:*",
+    f"""
+    💳 *{nome}*
+    💰 *Valor:* R$ {valor}
+
+    📲 *Como realizar o pagamento:*
+    1️⃣ Abra o app do seu banco  
+    2️⃣ Selecione *PIX* ou *Pagar*  
+    3️⃣ Escolha *PIX Copia e Cola*  
+
+    👇 *Copie o código abaixo:*
+    """,
         parse_mode="Markdown"
     )
+
 
     query.message.reply_text(
         f"`{pix_code}`",
@@ -346,6 +372,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
