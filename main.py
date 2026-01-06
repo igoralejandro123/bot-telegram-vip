@@ -212,41 +212,6 @@ def mp_pagamento_aprovado(payment_id):
     status = payment["response"]["status"]
     return status == "approved", payment["response"]
 
-def verificar_pagamento_automatico(chat_id, context: CallbackContext):
-    payment_id = context.user_data.get("payment_id")
-
-    if not payment_id:
-        return
-
-    aprovado, dados = mp_pagamento_aprovado(payment_id)
-
-    if aprovado:
-        user_id = context.user_data.get("user_id")
-        plano = context.user_data.get("plano")
-        valor_pago = dados.get("transaction_amount", 0)
-
-        registrar_evento(
-            user_id,
-            "purchase",
-            plano=plano,
-            valor=valor_pago
-        )
-
-        enviar_evento_meta(
-            "Purchase",
-            user_id=user_id,
-            valor=valor_pago
-        )
-
-        context.bot.send_message(
-            chat_id=chat_id,
-            text=f"✅ Pagamento confirmado!\n\nAcesse o grupo VIP:\n{LINK_GRUPO_VIP}"
-        )
-
-        # impede disparar duas vezes
-        context.user_data["payment_id"] = None
-
-
 
 
 # ======================
@@ -293,13 +258,13 @@ def escolher_plano(update: Update, context: CallbackContext):
     context.user_data["payment_id"] = identifier
 
     # Verificação automática (MANTÉM)
-  #  context.job_queue.run_repeating(
-  #       verificar_pagamento_automatico,
-  #      interval=15,
-  #       first=15,
-  #     context=chat_id,
-  #      name=str(identifier)
-  #  )
+    context.job_queue.run_repeating(
+         verificar_pagamento_automatico,
+         interval=15,
+         first=15,
+         context=chat_id,
+         name=str(identifier)
+     )
 
 
     # TEXTO
@@ -423,6 +388,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
