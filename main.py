@@ -232,6 +232,14 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     enviar_evento_meta("InitiateCheckout", user_id=user_id, valor=valor)
 
+
+    try:
+        pix_code, qr_base64, identifier = mp_criar_pix(valor, nome)
+    except Exception as e:
+        query.message.reply_text("❌ Erro ao gerar PIX. Tente novamente mais tarde.")
+        print("ERRO MERCADO PAGO:", e)
+        return
+
     import base64
     from io import BytesIO
 
@@ -244,14 +252,6 @@ def escolher_plano(update: Update, context: CallbackContext):
         parse_mode="Markdown"
     )
 
-
-    try:
-        pix_code, qr_base64, identifier = mp_criar_pix(valor, nome)
-        
-    except Exception as e:
-        query.message.reply_text("❌ Erro ao gerar PIX. Tente novamente mais tarde.")
-        print("ERRO MERCADO PAGO:", e)
-        return
 
 
     context.user_data["payment_id"] = identifier
@@ -372,6 +372,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
