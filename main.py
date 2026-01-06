@@ -285,8 +285,14 @@ def escolher_plano(update: Update, context: CallbackContext):
     # CÓDIGO PIX
     context.bot.send_message(
         chat_id=chat_id,
-        text=pix_code
+        text=(
+            "🟢🟢🟢 *CÓDIGO PIX – TOQUE PARA COPIAR* 🟢🟢🟢\n\n"
+            f"```{pix_code}```"
+        ),
+        parse_mode="Markdown"
     )
+
+
 
     # BOTÃO
     context.bot.send_message(
@@ -388,6 +394,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
