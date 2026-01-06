@@ -293,13 +293,14 @@ def escolher_plano(update: Update, context: CallbackContext):
     context.user_data["payment_id"] = identifier
 
     # Verificação automática (MANTÉM)
-    context.job_queue.run_repeating(
-        verificar_pagamento_automatico,
-        interval=15,
-        first=15,
-        context=context,
-        name=str(identifier)
-    )
+  #  context.job_queue.run_repeating(
+  #       verificar_pagamento_automatico,
+  #      interval=15,
+  #       first=15,
+  #     context=chat_id,
+  #      name=str(identifier)
+  #  )
+
 
     # TEXTO
     context.bot.send_message(
@@ -340,7 +341,8 @@ def escolher_plano(update: Update, context: CallbackContext):
 # VERIFICAR PAGAMENTO
 # ======================
 
-def verificar_pagamento(chat_id, context: CallbackContext):
+def verificar_pagamento_automatico(context: CallbackContext):
+    chat_id = context.job.context
     payment_id = context.user_data.get("payment_id")
 
     if not payment_id:
@@ -421,6 +423,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
