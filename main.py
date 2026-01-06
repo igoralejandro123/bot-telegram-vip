@@ -248,7 +248,6 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     query.message.reply_photo(
         photo=qr_buffer,
-        caption="📸 *Escaneie o QR Code acima para pagar via PIX*",
         parse_mode="Markdown"
     )
 
@@ -258,15 +257,16 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     query.message.reply_text(
     f"""
-    💳 *{nome}*
+     *{nome}*
     💰 *Valor:* R$ {valor}
 
-    📲 *Como realizar o pagamento:*
+    ❖ *Como realizar o pagamento:*
+    
     1️⃣ Abra o app do seu banco  
     2️⃣ Selecione *PIX* ou *Pagar*  
     3️⃣ Escolha *PIX Copia e Cola*  
 
-    👇 *Copie o código abaixo:*
+    👇 *Copie o código pix abaixo:*
     """,
         parse_mode="Markdown"
     )
@@ -279,7 +279,7 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     query.message.reply_text(
         "👆 Copie a chave PIX acima e realize o pagamento.\n\n"
-        "Após pagar, clique abaixo 👇",
+        "Após pagar, verifique abaixo 👇",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("✅ VERIFICAR PAGAMENTO", callback_data="verificar_pagamento")]
         ])
@@ -372,6 +372,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
