@@ -264,7 +264,8 @@ def escolher_plano(update: Update, context: CallbackContext):
     
     1️⃣ Abra o app do seu banco  
     2️⃣ Selecione *PIX* ou *Pagar*  
-    3️⃣ Escolha *PIX Copia e Cola*  
+    3️⃣ Escolha *PIX Copia e Cola*
+    4️⃣ Cole o código abaixo no seu banco
 
     👇 *Copie o código pix abaixo:*
     """,
@@ -372,6 +373,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
