@@ -351,11 +351,12 @@ def main():
     criar_tabela_gastos()
 
 
-    updater.start_polling()
+    updater.start_polling(drop_pending_updates=True)
     updater.idle()
 
 if __name__ == "__main__":
     main()
+
 
 
 
