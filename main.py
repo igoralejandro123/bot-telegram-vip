@@ -330,6 +330,12 @@ def verificar_pagamento_manual(update: Update, context: CallbackContext):
 
     verificar_pagamento(query.message.chat_id, context)
 
+def pegar_file_id(update: Update, context: CallbackContext):
+    video = update.message.video
+    if video:
+        update.message.reply_text(f"FILE_ID:\n{video.file_id}")
+
+
 
 
 # ======================
@@ -346,6 +352,7 @@ def main():
 
 
     dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("fileid", pegar_file_id))
     dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
     dp.add_handler(CallbackQueryHandler(escolher_plano))
 
@@ -360,6 +367,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
