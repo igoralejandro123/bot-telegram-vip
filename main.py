@@ -179,7 +179,7 @@ def enviar_evento_meta(event_name, user_id=None, valor=None):
                 "external_id": hashlib.sha256(str(user_id).encode()).hexdigest()
             }
         }],
-        "test_event_code": "TEST12345",  # use o código do Gerenciador de Eventos
+        "test_event_code": "TEST69417",  # use o código do Gerenciador de Eventos
         "access_token": os.getenv("META_ACCESS_TOKEN")
     }
 
@@ -395,6 +395,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
