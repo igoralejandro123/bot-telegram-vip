@@ -251,10 +251,16 @@ def escolher_plano(update: Update, context: CallbackContext):
 
     enviar_evento_meta("InitiateCheckout", user_id=user_id, valor=valor)
 
-    pix_code, identifier = syncpay_create_cashin(
-        amount=valor,
-        description=nome
-    )
+    try:
+        pix_code, identifier = syncpay_create_cashin(
+            amount=valor,
+            description=nome
+        )
+    except Exception as e:
+        query.message.reply_text("❌ Erro ao gerar PIX. Tente novamente mais tarde.")
+        print("ERRO SYNCPAY:", e)
+        return
+
 
     context.user_data["payment_id"] = identifier
 
@@ -367,6 +373,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
