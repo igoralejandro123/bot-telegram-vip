@@ -256,6 +256,8 @@ def verificar_pagamento_automatico(chat_id, context: CallbackContext):
 def escolher_plano(update: Update, context: CallbackContext):
     query = update.callback_query
     query.answer()
+    chat_id = query.message.chat_id
+
 
     context.user_data["user_id"] = query.from_user.id
 
@@ -280,26 +282,29 @@ def escolher_plano(update: Update, context: CallbackContext):
     qr_img = base64.b64decode(qr_base64)
     qr_buffer = BytesIO(qr_img)
 
-    # QR CODE
-    query.message.reply_photo(
-        photo=qr_buffer,
-        caption="📸 QR Code PIX"
-    )
+# QR CODE
+context.bot.send_photo(
+    chat_id=chat_id,
+    photo=qr_buffer,
+    caption="📸 QR Code PIX"
+)
 
-    # Salva pagamento
-    context.user_data["payment_id"] = identifier
+# Salva pagamento (MANTÉM)
+context.user_data["payment_id"] = identifier
 
-    # Verificação automática
-    context.job_queue.run_repeating(
-        verificar_pagamento_automatico,
-        interval=15,
-        first=15,
-        context=context,
-        name=str(identifier)
-    )
+# Verificação automática (MANTÉM)
+context.job_queue.run_repeating(
+    verificar_pagamento_automatico,
+    interval=15,
+    first=15,
+    context=context,
+    name=str(identifier)
+)
 
-    # TEXTO
-    query.message.reply_text(
+# TEXTO
+context.bot.send_message(
+    chat_id=chat_id,
+    text=(
         f"{nome}\n"
         f"💰 Valor: R$ {valor}\n\n"
         "❖ Como realizar o pagamento:\n"
@@ -309,18 +314,23 @@ def escolher_plano(update: Update, context: CallbackContext):
         "4️⃣ Cole o código abaixo\n\n"
         "👇 Copie o código PIX abaixo:"
     )
+)
 
-    # CÓDIGO PIX
-    query.message.reply_text(pix_code)
+# CÓDIGO PIX
+context.bot.send_message(
+    chat_id=chat_id,
+    text=pix_code
+)
 
-    # BOTÃO
-    query.message.reply_text(
-        "👆 Copie a chave PIX acima e realize o pagamento.\n\n"
-        "Após pagar, verifique abaixo 👇",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("✅ VERIFICAR PAGAMENTO", callback_data="verificar_pagamento")]
-        ])
-    )
+# BOTÃO
+context.bot.send_message(
+    chat_id=chat_id,
+    text="👆 Copie a chave PIX acima e realize o pagamento.\n\nApós pagar, verifique abaixo 👇",
+    reply_markup=InlineKeyboardMarkup([
+        [InlineKeyboardButton("✅ VERIFICAR PAGAMENTO", callback_data="verificar_pagamento")]
+    ])
+)
+
 
 
 
@@ -410,6 +420,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
