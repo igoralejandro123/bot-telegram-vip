@@ -8,8 +8,11 @@ from telegram.ext import (
     Updater,
     CommandHandler,
     CallbackQueryHandler,
-    CallbackContext
+    CallbackContext,
+    MessageHandler,
+    Filters
 )
+
 
 # ======================
 # CONFIGURAÇÕES
@@ -330,10 +333,21 @@ def verificar_pagamento_manual(update: Update, context: CallbackContext):
 
     verificar_pagamento(query.message.chat_id, context)
 
-def pegar_file_id(update: Update, context: CallbackContext):
-    video = update.message.video
-    if video:
-        update.message.reply_text(f"FILE_ID:\n{video.file_id}")
+
+def ativar_fileid(update: Update, context: CallbackContext):
+    context.user_data["esperando_video_fileid"] = True
+    update.message.reply_text("✅ Ok! Agora envie o VÍDEO aqui que eu te devolvo o FILE_ID.")
+
+def pegar_fileid_video(update: Update, context: CallbackContext):
+    if not context.user_data.get("esperando_video_fileid"):
+        return
+
+    if update.message.video:
+        context.user_data["esperando_video_fileid"] = False
+        update.message.reply_text(f"FILE_ID:\n{update.message.video.file_id}")
+    else:
+        update.message.reply_text("⚠️ Isso não é vídeo. Envie um VÍDEO.")
+
 
 
 
@@ -352,7 +366,8 @@ def main():
 
 
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("fileid", pegar_file_id))
+    dp.add_handler(CommandHandler("fileid", ativar_fileid))
+    dp.add_handler(MessageHandler(Filters.video, pegar_fileid_video))
     dp.add_handler(CallbackQueryHandler(verificar_pagamento_manual, pattern="^verificar_pagamento$"))
     dp.add_handler(CallbackQueryHandler(escolher_plano))
 
@@ -367,6 +382,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 
